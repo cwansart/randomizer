@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Randomizer</title>
+  <style>
+    #existing-results {
+      width: 35em;
+      height: 20em;
+    }
+  </style>
+  <script>
+    const X_MAX = 11;
+    const Y_MAX = 10;
+    let dataSet = [];
+    let names = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelector('#existing-results').value = '';
+      registerEvents();
+    });
+
+    function registerEvents() {
+      document.querySelector('#ramdomizer-button').addEventListener('click', onRandonmizerButtonClicked);
+      document.querySelector('#existing-results').addEventListener('blur', onParseInput);
+      document.querySelector('#names').addEventListener('blur', onParseNames);
+    }
+
+    function onRandonmizerButtonClicked() {
+      do {
+        var x = getRandomX();
+        var y = getRandomY();
+      } while(!!dataSet.find(tuple => tuple.x === x && tuple.y === y));
+
+      const result = document.querySelector('#calucation-result');
+      result.innerHTML = `{(${x})(${y})}`;
+
+      let count = 0;
+      names.forEach(name => {
+        count += name.count;
+      });
+      const avg = count / names.length;
+      
+      do {
+        var event = names[getRandomNumber(names.length-1)];
+      } while(event.count > avg);
+      event.count = event.count + 1;
+
+      document.querySelector('#event-type').innerHTML = event.name;
+    }
+
+    function getRandomNumber(max) {
+      return Math.round(Math.random() * max);
+    }
+
+    function getRandomX() {
+      return getRandomNumber(X_MAX);
+    }
+
+    function getRandomY() {
+      return getRandomNumber(Y_MAX);
+    }
+
+    function onParseInput() {
+      const errorList = document.querySelector('#existing-reults-errors');
+      errorList.innerText = '';
+
+      const input = document.querySelector('#existing-results').value.trim();
+      const lines = input.split(/\r?\n/)
+      let foundErrors = false;
+      lines.forEach((line, lineNumber) => {
+        if (!line.match(/^\d{1,2},\d{1,2}$/)) {
+          const error = document.createElement('li');
+          error.innerText = `Fehler in Zeile ${lineNumber-1}: ${line}`
+          errorList.appendChild(error)
+          foundErrors = true;
+        }
+      });
+
+      if (!foundErrors) {
+        dataSet = lines.map(line => {
+          const tuple = line.split(',');
+          return {
+            x: +tuple[0],
+            y: +tuple[1],
+          }
+        });
+      }
+    }
+
+    function onParseNames() {
+      const input = document.querySelector('#names').value.trim();
+      names = input.split(/\r?\n/).map(name => {
+        return {
+          count: 0,
+          name
+        };
+      });
+    }
+  </script>
+</head>
+<body>
+  <div>
+    <h2>Randomizer</h2>
+    <div>
+      <input type="button" value="Get coordinate" id="ramdomizer-button">
+    </div>
+    <div>
+      <div>
+        Berechnete Koordinate: <span id="calucation-result"><i>noch nichts berechnet...</i></span>
+      </div>
+      <div>
+        Eventtyp: <span id="event-type"><i>noch keins ausgewählt...</i></span>
+      </div>
+    </div>
+  </div>
+  <div>
+    <h2>Vorhandene Treffer</h2>
+    <div>
+      <textarea id="existing-results" placeholder="Im Format pro Zeile: X,Y
+Zum Beispiel:
+0,6
+4,10
+9,9"></textarea>
+      <ul id="existing-reults-errors"></ul>
+    </div>
+  </div>
+  <div>
+    <h2>Namensauswahle</h2>
+    <div>
+      <textarea id="names" placeholder="Pro Zeile ein Name"></textarea>
+    </div>
+  </div>
+</body>
+</html>
